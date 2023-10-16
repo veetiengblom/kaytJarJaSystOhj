@@ -9,22 +9,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-void reverse(FILE *input, FILE *output) {
+//Reverse input file, write in reverse to output file or print in terminal
+
+void reverseFile(FILE *input, FILE *output) {
     char **lines = NULL;
-    size_t line_count = 0;
+    size_t len = 0;
     char *line = NULL;
     ssize_t read;
     int counter = 0;
     
     // Read lines into an array of strings
-    while ((read = getline(&line, &line_count, input)) != -1) {
-        lines = (char **)realloc(lines, (line_count + 1) * sizeof(char *));
+    while ((read = getline(&line, &len, input)) != -1) {
+        lines = (char **)realloc(lines, (len + 1) * sizeof(char *));
         if (lines == NULL) {
             fprintf(stderr, "malloc failed\n");
             exit(1);
         }
         lines[counter] = strdup(line);
-        line_count++;
+        len++;
         counter++;
     }
     
@@ -37,7 +39,49 @@ void reverse(FILE *input, FILE *output) {
     }
 
     free(lines);
+    return;
 }
+
+//Reverse given user input
+
+void reverseUserInput() {
+    char *line = NULL;
+    size_t len;
+    char lines[128][128];
+    int counter = 0;
+    
+    fprintf(stdout, "Provide inputs and enter 'END' to terminate: \n\n");
+    //Read lines into array from user input
+    while(getline(&line, &len, stdin) != -1)
+    {
+        if (strcmp(line, "END\n") == 0)	{
+            break;
+        }
+
+        if (strcmp(line, "\n") == 0) {
+            fprintf(stdout, "ERROR: Please enter words as input!\n\n");
+            exit(1);
+        }
+        
+        strcpy(lines[counter], line);
+        counter++;					
+        
+    }
+    free(line);
+    
+    fprintf(stdout, "\n");
+    
+    fprintf(stdout, "Inputs in reverse order: \n\n");
+
+    //Print array in reverse order
+
+    for (int i = counter - 1; i >= 0; i--) {
+        fprintf(stdout, "%s", lines[i]);
+    }
+    fprintf(stdout, "\n");
+    return;
+}
+
 
 int main(int argc, char *argv[]) {
     FILE *input = stdin;
@@ -69,7 +113,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    reverse(input, output);
+    //Handle reversing based on command line arguments
+    if(argc == 1) {
+        reverseUserInput();
+    } else {
+        reverseFile(input, output);
+    }
 
     // Close files if not stdin or stdout
     if (input != stdin) {
