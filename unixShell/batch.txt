@@ -1,0 +1,7 @@
+ls
+rmdir test
+ls
+mkdir haha
+ls
+rmdir haha
+ls
