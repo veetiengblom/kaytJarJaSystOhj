@@ -8,8 +8,10 @@
 #define MAX_INPUT_SIZE 1024
 #define MAX_ARGS 64
 
-char* path[MAX_ARGS];
-int path_size = 1; // Default path size is 1 ("/bin")
+#define PATH_MAX 64
+
+char* search_path[PATH_MAX];
+char* original_path[PATH_MAX];
 
 
 // Function to print a simple error message to the standard error (stderr).
@@ -48,6 +50,16 @@ void execute_command(char *args[]) {
     }
 }
 
+// Function to set the search path for external commands
+void set_path(char *args[]) {
+    int i = 1;
+    while (args[i] != NULL) {
+        search_path[i - 1] = args[i];
+        i++;
+    }
+    search_path[i - 1] = NULL;
+}
+
 int main(int argc, char *argv[]) {
     if (argc != 1 && argc != 2) {
         fprintf(stderr, "Usage: %s [batch_file]\n", argv[0]);
@@ -67,6 +79,14 @@ int main(int argc, char *argv[]) {
 
     char input[MAX_INPUT_SIZE];
     char *args[MAX_ARGS];
+
+    search_path[0] = "/bin"; // Default search path
+    // Copy the default search path to the original_path array
+    for (int i = 0; search_path[i] != NULL; i++) {
+        original_path[i] = strdup(search_path[i]);
+    }
+    original_path[PATH_MAX - 1] = NULL;
+
 
     while (1) {
         if (interactive) {
@@ -94,16 +114,29 @@ int main(int argc, char *argv[]) {
             } else if (chdir(args[1]) != 0) {
                 print_error();  
             }
-        } else if (strcmp(args[0], "path") == 0) {
-                    path_size = 1;
-                    for (int i = 1; args[i] != NULL; i++) {
-                        path[path_size] = args[i];
-                        path_size++;
-                    }
+        }else if (strcmp(args[0], "path") == 0) {
+            set_path(args);
         } else {
-            execute_command(args);  // Execute external commands
+            // Check each directory in the search path
+            int i = 0;
+            while (search_path[i] != NULL) {
+                char command_path[PATH_MAX];
+                snprintf(command_path, PATH_MAX, "%s/%s", search_path[i], args[0]);
+                if (access(command_path, X_OK) == 0) {
+                    // Command found in the current directory in the search path
+                    execute_command(args);
+                    break;
+                }
+                i++;
+            }
+            // Restore the original search path
+            for (int j = 0; original_path[j] != NULL; j++) {
+                search_path[j] = strdup(original_path[j]);
+            }
+            search_path[PATH_MAX - 1] = NULL;
         }
-    }
 
+    }
     return 0;
+
 }
