@@ -79,6 +79,7 @@ int main(int argc, char *argv[]) {
 
     char input[MAX_INPUT_SIZE];
     char *args[MAX_ARGS];
+    int checkPathError = 0;
 
     search_path[0] = "/bin"; // Default search path
     // Copy the default search path to the original_path array
@@ -125,10 +126,15 @@ int main(int argc, char *argv[]) {
                 if (access(command_path, X_OK) == 0) {
                     // Command found in the current directory in the search path
                     execute_command(args);
+                    checkPathError = 1;
                     break;
                 }
                 i++;
             }
+            if (checkPathError == 0) {
+                print_error();
+            }
+            checkPathError = 0;
             // Restore the original search path
             for (int j = 0; original_path[j] != NULL; j++) {
                 search_path[j] = strdup(original_path[j]);
