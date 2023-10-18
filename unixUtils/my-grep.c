@@ -23,6 +23,24 @@ void findMatches(FILE *fp, const char *searchTerm) {
     free(lineBuffer);
 }
 
+void stdinFindMatches(FILE *fp, const char *searchTerm) {
+    char *lineBuffer = NULL;
+    size_t lenBuffer = 0;
+    ssize_t read;
+
+    //Check if string contains search term and if so print it out
+    while ((read = getline(&lineBuffer, &lenBuffer, fp) != -1)) {
+        if (strstr(lineBuffer, searchTerm) != NULL) {
+            printf("%s", lineBuffer);
+        }
+        if (strcmp(lineBuffer, "END\n") == 0)	{
+            break;
+        }
+    }
+
+    free(lineBuffer);
+}
+
 
 int main(int argc, char *argv[]) {
 
@@ -34,7 +52,8 @@ int main(int argc, char *argv[]) {
     }
     // If no file given, read from stdin
     if (argc == 2) {
-        findMatches(stdin, searchTerm);
+        printf("Enter text to search from, write 'END' to terminate: \n");
+        stdinFindMatches(stdin, searchTerm);
         exit(0);
     }
 
